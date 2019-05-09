@@ -20,15 +20,18 @@
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
 #include <ArduinoJson.h>          //https://github.com/bblanchon/ArduinoJson
 #include <HTTPClient.h>
+#include <time.h>
 
 void ResetDevice();
 
 //Defines and constants  (Version might be better as date stting, and used for headers..?)
 #define VERSION "TickerTape v0.6"
 #define DEBUG_BUFFER_SIZE 500
+#define LED 5
+
 int DEBUG = 1;
 
-//The state machine for the device. 0 is the default, display the time and show the sub count too. 1 is time only. 2 is subcount only!
+//The state machine for the device. 0 is the default, 1 displays the weather API.
 int DeviceMode = 0;
 
 unsigned long p_time_Millis = 0;        // will store last time LED was updated
@@ -41,9 +44,7 @@ uint16_t UI_Leds = 0b0000000000000000;  //all the additional UI LEDS are off.
 
 LED_Display_Wrapper LEDdisplay = LED_Display_Wrapper();
 
-//ESP On board LED
-#define LED 5
-
+//Weather API stuff
 char apiKey_default[40]  = "10babfc51dce3f77465a5a398695ea98";
 char apiLocation_default[40] = "London,uk";
 char weather_payload[700];
@@ -59,11 +60,9 @@ unsigned long api_lasttime;   //last time api request has been done
 unsigned long subs = 0;
 WiFiClientSecure client;
 
-//Time params
-#include <time.h>
-
+//Time Stuff
 short timezone_default = 1;
-uint8_t timezone;
+short timezone;
 
 char displaybuffer[6] = {' ',' ',' ',' ',' ',' '};
 char _str_buffer[7];  //6 chars and a null char...

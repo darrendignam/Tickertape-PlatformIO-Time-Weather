@@ -30,8 +30,6 @@ void displayWeather(){
                 JsonObject& json = jsonBuffer.parseObject( payload_data );
                 json.printTo(Serial);
                 if (json.success()) {
-                  bool API_failed = false;
-                  
                   Serial.println("\nparsed json");
 
                   //p.key// is a const char* pointing to the key
@@ -107,7 +105,7 @@ void getWeather(){
 
         http.end();
 
-        DeviceMode == 0; //Sets the tickertape back to clock mode
+        DeviceMode = 0; //Sets the tickertape back to clock mode
         weather_busy = 0;
 }
 
