@@ -1,6 +1,6 @@
 /* ***************************************************************************************************** *\
 **     TickerTape Firmware                                                                               **
-**     (Kickstarter Backer Version 0.6)                                                                  **
+**     (Kickstarter Backer Version 0.7)                                                                  **
 **     (c) 2019 Darren Dignam                                                                            **
 **                                                                                                       **
 **                                                                                                       **
@@ -25,7 +25,8 @@
 void ResetDevice();
 
 //Defines and constants  (Version might be better as date stting, and used for headers..?)
-#define VERSION "TickerTape v0.6"
+#define VERSION "TickerTape v0.7"
+#define VNUMBER "0.7" 
 #define DEBUG_BUFFER_SIZE 500
 #define LED 5
 
@@ -59,6 +60,9 @@ unsigned long api_mtbs = 60000; //mean time between api requests
 unsigned long api_lasttime;   //last time api request has been done
 unsigned long subs = 0;
 WiFiClientSecure client;
+
+// The timezone stuff here is a bit crude, so if you want to make it better, skip down to where these values are used (line 333), and you can implement an actual 
+// timezone it is a bit more complex, but should be more useful in the long run, accounting for daylight savings time, and odd timezones where the offset is 1.5 hours.
 
 //Time Stuff
 short timezone_default = 1;
@@ -101,7 +105,7 @@ void gotTouch3(){
 }
 
 
-#include "helper_functions.h"
+#include <helper_functions.h>
 
 //flag for saving data
 bool shouldSaveConfig = true;
@@ -137,7 +141,7 @@ void setup() {
   touchAttachInterrupt(T3, gotTouch3, touch_threshold);
 
   //debug..
-  dbgprint ( "Starting ESP32-TickerTape running on CPU %d at %d MHz.  Version %s.  Free memory %d", xPortGetCoreID(), ESP.getCpuFreqMHz(), VERSION, ESP.getFreeHeap() );
+  dbgprint( "Starting ESP32-TickerTape running on CPU %d at %d MHz.  Version %s.  Free memory %d", xPortGetCoreID(), ESP.getCpuFreqMHz(), VERSION, ESP.getFreeHeap() );
 
   LEDdisplay.BLINK();//LEDdisplay.BLINK();LEDdisplay.BLINK();  //LEDdisplay.BLINK();LEDdisplay.BLINK();
 
@@ -215,23 +219,18 @@ void setup() {
 
   String tmpString = "";
   
-  // if( WelcomeText == "" ){
   if(strlen(WelcomeText) == 0){
     tmpString = "TICKERTAPE - KICKSTARTER";
   }else{
     tmpString = WelcomeText;
   }
-  String _message = "v0.6 " + tmpString + "      ";
+  String _message = "v"+VNUMBER+" " + tmpString + "      ";
   LEDdisplay.ScrollText( _message );
 
   if(strlen(apiKey) == 0){
-    //apiKey = apiKey_default;
-    //size_t destination_size = sizeof (array2);
     strncpy(apiKey, apiKey_default, 40);
-    //array2[destination_size - 1] = '\0';
   }
   if(strlen(apiLocation) == 0){
-    //apiLocation = apiLocation_defafult;
     strncpy(apiLocation, apiLocation_default, 40);
   }
 
@@ -331,8 +330,31 @@ void setup() {
   //SPIFFS.format();  //erases stored values
   Serial.println("Done");
 
-  //setup time stuff
+  // This is the code that uses the timezone value, it's a crude offsetting value that gets used here with configTime function. It has been suggested to me that you can actually use a 
+  // proper timezone here.
+
+  //setup time stuff (comment this command and use the instructions below to use a timezone instead.)
   configTime(timezone * 3600, 0, "pool.ntp.org", "time.nist.gov");
+
+
+  //Use theese commands to implement an actual timezone:
+  //
+  // the standard configTime function:
+//            configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  //
+  // now you need to use the setenv command and set the device TZ timezone. the Line below is for GMT. But you will need to replace the "GMT0" 
+  // with your timezone string. 
+  // The timezone strings can be found in the following CSV online:
+  // https://github.com/nayarsystems/posix_tz_db/blob/master/zones.csv
+  // Further reading:
+  // https://github.com/G6EJD/ESP32-Time-Services-and-SETENV-variable/blob/master/README.md
+  // https://www.timeanddate.com/time/zones/
+  //
+//            setenv("TZ", "GMT0", 1);
+  //
+  // You can add additional parameters to the timezone string, but that is beyond the scope of this comment!
+
+
   Serial.println("\nWaiting for time");
   while (!time(nullptr)) {
     Serial.print(".");
