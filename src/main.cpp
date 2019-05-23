@@ -224,7 +224,7 @@ void setup() {
   }else{
     tmpString = WelcomeText;
   }
-  String _message = "v"+VNUMBER+" " + tmpString + "      ";
+  String _message = "v0.7 " + tmpString + "      ";
   LEDdisplay.ScrollText( _message );
 
   if(strlen(apiKey) == 0){
